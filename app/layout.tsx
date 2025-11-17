@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: 'Campus Navigation System',
   description: 'Find classrooms, labs, faculty cabins, and campus resources',
   metadataBase: new URL(siteUrl),
+  icons: {
+    icon: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
