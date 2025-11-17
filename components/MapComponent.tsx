@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { roomsAPI } from '@/lib/api'
 import L from 'leaflet'
@@ -33,6 +33,16 @@ function MapController({ center }: { center: [number, number] }) {
       map.setView(center, map.getZoom())
     }
   }, [center, map])
+  return null
+}
+
+function MapInitializer({ onReady }: { onReady: (map: L.Map) => void }) {
+  const map = useMap()
+  useEffect(() => {
+    if (map) {
+      onReady(map)
+    }
+  }, [map, onReady])
   return null
 }
 
@@ -138,6 +148,13 @@ export default function MapComponent() {
     !mapInitialized &&
     !mapInstanceRef.current
 
+  const handleMapReady = useCallback((map: L.Map) => {
+    if (!mapInstanceRef.current) {
+      mapInstanceRef.current = map
+      setMapInitialized(true)
+    }
+  }, [])
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -166,13 +183,8 @@ export default function MapComponent() {
             zoom={15}
             style={{ height: '100%', width: '100%' }}
             scrollWheelZoom={true}
-            whenReady={(map) => {
-              if (!mapInstanceRef.current) {
-                mapInstanceRef.current = map.target
-                setMapInitialized(true) // Mark as initialized to prevent re-rendering
-              }
-            }}
           >
+            <MapInitializer onReady={handleMapReady} />
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
