@@ -1,11 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
-import { LogIn, Mail, Lock, User } from 'lucide-react'
+import { LogIn, Mail, Lock } from 'lucide-react'
 import toast from 'react-hot-toast'
+import Cookies from 'js-cookie'
+
+import { googleSignInWithIdToken } from '../../lib/googleSignIn'   // ⭐ ADD THIS
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -13,7 +17,8 @@ export default function LoginPage() {
     password: '',
   })
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const [googleLoading, setGoogleLoading] = useState(false) // ⭐ ADD THIS
+  const { login, setUser } = useAuth()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,6 +35,41 @@ export default function LoginPage() {
       setLoading(false)
     }
   }
+
+  // ⭐ Google Login Handler
+  const handleGoogleLogin = async () => {
+  try {
+    setGoogleLoading(true);
+
+    // 1️⃣ Firebase login
+    const { firebaseUser, idToken } = await googleSignInWithIdToken();
+
+    // 2️⃣ Hit backend Google login
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/google`,
+      { idToken }
+    );
+
+    const { token, user } = response.data;
+
+    // 3️⃣ Store JWT
+    Cookies.set('token', token, { expires: 7 });
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+    // 4️⃣ Update global auth state
+    setUser(user);
+
+    toast.success('Logged in with Google!');
+    router.push('/dashboard');
+
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || 'Google sign-in failed');
+  } finally {
+    setGoogleLoading(false);
+  }
+};
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 px-4">
@@ -77,6 +117,7 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Normal Login Button */}
           <button
             type="submit"
             disabled={loading}
@@ -85,6 +126,16 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        {/* ⭐ Google Login Button */}
+        <button
+          onClick={handleGoogleLogin}
+          disabled={googleLoading}
+          className="w-full mt-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 flex items-center justify-center gap-2"
+        >
+          <img src="/google-logo.svg" alt="Google" className="w-5 h-5" />
+          {googleLoading ? 'Connecting...' : 'Sign in with Google'}
+        </button>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
@@ -98,4 +149,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

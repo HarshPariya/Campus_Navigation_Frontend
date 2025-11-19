@@ -97,7 +97,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="p-4 border-t">
             <div className="flex items-center gap-3 px-4 py-3 mb-2">
               <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                <Users className="w-5 h-5 text-primary-600" />
+                <img src={user?.avatar || '/default-avatar.png'} alt={user?.name || 'User avatar'} className="w-10 h-10 rounded-full" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
