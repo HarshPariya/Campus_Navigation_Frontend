@@ -69,6 +69,12 @@ export default function EventRegistrationPage() {
 
   const alreadyRegistered = event?.attendees?.some((attendee) => attendee._id === user?.id)
 
+  useEffect(() => {
+    if (event && alreadyRegistered) {
+      router.replace(`/events/${event._id}`)
+    }
+  }, [event, alreadyRegistered, router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!event || !user) return
@@ -97,12 +103,6 @@ export default function EventRegistrationPage() {
       </Layout>
     )
   }
-
-  useEffect(() => {
-    if (event && alreadyRegistered) {
-      router.replace(`/events/${event._id}`)
-    }
-  }, [event, alreadyRegistered, router])
 
   if (alreadyRegistered) {
     return null
